@@ -1,13 +1,15 @@
 "use strict";
 
 const CACHE_PREFIX = "surucu-asistani-";
-const CACHE_NAME = `${CACHE_PREFIX}v144-pwa-1`;
+const CACHE_NAME = `${CACHE_PREFIX}no-gps-1`;
 const APP_SHELL = [
   "./",
   "./index.html",
   "./manifest.webmanifest",
   "./icon-192.png",
-  "./icon-512.png"
+  "./icon-512.png",
+  "./gps-cleanup.css",
+  "./gps-cleanup.js"
 ];
 
 self.addEventListener("install", event => {
@@ -36,7 +38,6 @@ self.addEventListener("fetch", event => {
   const requestUrl = new URL(event.request.url);
   const scopeUrl = new URL(self.registration.scope);
 
-  // Harita, trafik, hava ve diğer dış servis yanıtlarını önbelleğe alma.
   if (requestUrl.origin !== scopeUrl.origin ||
       !requestUrl.pathname.startsWith(scopeUrl.pathname)) return;
 
@@ -47,9 +48,7 @@ self.addEventListener("fetch", event => {
         try {
           const cache = await caches.open(CACHE_NAME);
           await cache.put(event.request, response.clone());
-        } catch (cacheError) {
-          // Önbellek dolu olsa bile çevrimiçi yanıtı kullanıcıya göster.
-        }
+        } catch (cacheError) {}
       }
       return response;
     } catch (error) {

@@ -1,0 +1,56 @@
+name: GPS ozelliklerini kaldir
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+    paths:
+      - '.github/workflows/apply-gps-removal.yml'
+      - 'gps-cleanup.js'
+      - 'gps-cleanup.css'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: index.html dosyasina temizlik katmanini ekle
+        shell: python
+        run: |
+          from pathlib import Path
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+          css = '<link rel="stylesheet" href="./gps-cleanup.css?v=1">'
+          js = '<script src="./gps-cleanup.js?v=1"></script>'
+          if css not in s:
+              s = s.replace('</head>', css + '\n</head>', 1)
+          if js not in s:
+              s = s.replace('</body>', js + '\n</body>', 1)
+          p.write_text(s, encoding='utf-8')
+
+      - name: GPS/Taksimetre temizligini dogrula
+        shell: bash
+        run: |
+          set -e
+          grep -q 'gps-cleanup.css' index.html
+          grep -q 'gps-cleanup.js' index.html
+          grep -q 'quickTagsimeterBtn' gps-cleanup.js
+          grep -q 'gpsRideChoiceBtn' gps-cleanup.js
+          grep -q 'roadAlertsCard' gps-cleanup.js
+          grep -q 'watchPosition' gps-cleanup.js
+          grep -q 'getCurrentPosition' index.html
+
+      - name: Degisikligi kaydet
+        shell: bash
+        run: |
+          if ! git diff --quiet -- index.html; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add index.html
+            git commit -m "Remove GPS-driven features from active UI"
+            git push
+          fi

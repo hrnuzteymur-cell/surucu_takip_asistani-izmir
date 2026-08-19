@@ -1,0 +1,20 @@
+/* GPS/Taksimetre temizliği: manuel KM girişi korunur, SOS tek seferlik konum korunur. */
+#quickTagsimeterBtn,
+#homeTaximeterMini,
+#trackingView,
+.bottom-nav .nav[data-view="trackingView"],
+#gpsRideChoiceBtn,
+#rideGpsPanel,
+#roadAlertsCard,
+.road-alert-home-gps,
+#parkingSettingsSection .park-location-card,
+#autoGpsWithShiftToggle,
+#autoGpsTransferToggle,
+#showGpsRideOptionToggle {
+  display: none !important;
+}
+label:has(#autoGpsWithShiftToggle),
+label:has(#autoGpsTransferToggle),
+label:has(#showGpsRideOptionToggle) {
+  display: none !important;
+}
