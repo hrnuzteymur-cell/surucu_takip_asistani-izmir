@@ -1,0 +1,56 @@
+name: Yuklenen HTML tasarimini uygula
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - '.import/**'
+      - '.github/workflows/import-uploaded-design.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Parcalari kontrol et
+        id: check
+        shell: bash
+        run: |
+          count=$(find .import -maxdepth 1 -type f -name 'chunk_*.txt' 2>/dev/null | wc -l | tr -d ' ')
+          echo "count=$count" >> "$GITHUB_OUTPUT"
+          if [ "$count" != "11" ]; then
+            echo "Henuz tum parcalar yuklenmedi: $count/11"
+          fi
+
+      - name: Yeni index.html dosyasini olustur
+        if: steps.check.outputs.count == '11'
+        shell: bash
+        run: |
+          cat .import/chunk_*.txt | base64 -d | gunzip > index.html
+          actual=$(sha256sum index.html | awk '{print $1}')
+          test "$actual" = "ef241ce2a1ae801589c469fc62665aaafe235ecde0408d9020e9120f0f782abd"
+          grep -q 'Sürüm 146 Professional' index.html
+          ! grep -q 'id="trackingView"' index.html
+          ! grep -q 'id="quickTagsimeterBtn"' index.html
+          ! grep -q 'id="gpsRideChoiceBtn"' index.html
+          ! grep -q 'id="roadAlertsCard"' index.html
+          ! grep -q 'id="autoGpsWithShiftToggle"' index.html
+          ! grep -q 'id="autoGpsTransferToggle"' index.html
+          ! grep -q 'id="showGpsRideOptionToggle"' index.html
+
+      - name: Gecici dosyalari temizle ve kaydet
+        if: steps.check.outputs.count == '11'
+        shell: bash
+        run: |
+          rm -rf .import
+          rm -f gps-cleanup.js gps-cleanup.css .github/workflows/apply-gps-removal.yml
+          rm -f .github/workflows/import-uploaded-design.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Apply uploaded v146 design without GPS features"
+          git push
