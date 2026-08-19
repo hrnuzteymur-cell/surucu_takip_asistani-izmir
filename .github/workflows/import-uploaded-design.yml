@@ -22,17 +22,17 @@ jobs:
         run: |
           count=$(find .import -maxdepth 1 -type f -name 'chunk_*.txt' 2>/dev/null | wc -l | tr -d ' ')
           echo "count=$count" >> "$GITHUB_OUTPUT"
-          if [ "$count" != "11" ]; then
-            echo "Henuz tum parcalar yuklenmedi: $count/11"
+          if [ "$count" != "17" ]; then
+            echo "Henuz tum parcalar yuklenmedi: $count/17"
           fi
 
       - name: Yeni index.html dosyasini olustur
-        if: steps.check.outputs.count == '11'
+        if: steps.check.outputs.count == '17'
         shell: bash
         run: |
-          cat .import/chunk_*.txt | base64 -d | gunzip > index.html
+          cat .import/chunk_*.txt | base64 -d | xz -d > index.html
           actual=$(sha256sum index.html | awk '{print $1}')
-          test "$actual" = "ef241ce2a1ae801589c469fc62665aaafe235ecde0408d9020e9120f0f782abd"
+          test "$actual" = "7b9cb88224c429f6946bef84c0def8e4486326ec577a5b492371bb24b9972774"
           grep -q 'Sürüm 146 Professional' index.html
           ! grep -q 'id="trackingView"' index.html
           ! grep -q 'id="quickTagsimeterBtn"' index.html
@@ -43,7 +43,7 @@ jobs:
           ! grep -q 'id="showGpsRideOptionToggle"' index.html
 
       - name: Gecici dosyalari temizle ve kaydet
-        if: steps.check.outputs.count == '11'
+        if: steps.check.outputs.count == '17'
         shell: bash
         run: |
           rm -rf .import
